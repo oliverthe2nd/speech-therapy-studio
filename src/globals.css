@@ -1,104 +1,54 @@
 /**
- * Speech Therapy Studio — v0 design tokens
- * (matches original linked codebase CSS variables)
+ * SpeakFlow — v0 dark speech therapy dashboard theme
+ * (from speech-therapy-dashboard v0 export)
  */
 
 :root {
-  --background: #ffffff;
-  --foreground: #08060d;
-
-  --card: #ffffff;
-  --card-foreground: #08060d;
-
-  --muted: #f4f3ec;
-  --muted-foreground: #6b6375;
-
-  --primary: #aa3bff;
-  --primary-foreground: #ffffff;
-  --primary-muted: rgba(170, 59, 255, 0.1);
-  --primary-border: rgba(170, 59, 255, 0.45);
-
-  --secondary: #f4f3ec;
-  --secondary-foreground: #08060d;
-
-  --accent: #aa3bff;
-  --accent-foreground: #ffffff;
-
-  --destructive: #e11d48;
-  --destructive-foreground: #ffffff;
-
-  --success: #16a34a;
-  --warning: #f59e0b;
-  --warning-foreground: #451a03;
-  --info: #0ea5e9;
-
-  --border: #e5e4e7;
-  --input: #e5e4e7;
-  --ring: #aa3bff;
-
-  --checkin: #f59e0b;
-  --checkin-foreground: #451a03;
-  --checkin-muted: #fffbeb;
-
-  --radius: 0.75rem;
-
+  --background: oklch(0.12 0.005 260);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.18 0.008 260);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.16 0.006 260);
+  --popover-foreground: oklch(0.95 0 0);
+  --primary: oklch(0.72 0.19 175);
+  --primary-foreground: oklch(0.12 0.005 260);
+  --secondary: oklch(0.22 0.01 260);
+  --secondary-foreground: oklch(0.85 0 0);
+  --muted: oklch(0.25 0.01 260);
+  --muted-foreground: oklch(0.6 0 0);
+  --accent: oklch(0.72 0.19 175);
+  --accent-foreground: oklch(0.12 0.005 260);
+  --destructive: oklch(0.65 0.2 25);
+  --destructive-foreground: oklch(0.95 0 0);
+  --success: oklch(0.72 0.19 175);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.95 0.02 85);
+  --info: oklch(0.65 0.15 200);
+  --border: oklch(0.28 0.01 260);
+  --input: oklch(0.22 0.01 260);
+  --ring: oklch(0.72 0.19 175);
+  --chart-1: oklch(0.72 0.19 175);
+  --chart-2: oklch(0.65 0.15 200);
+  --chart-3: oklch(0.58 0.12 220);
+  --chart-4: oklch(0.75 0.18 160);
+  --chart-5: oklch(0.68 0.16 190);
+  --radius: 1rem;
+  --sidebar: oklch(0.14 0.006 260);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.72 0.19 175);
+  --sidebar-primary-foreground: oklch(0.12 0.005 260);
+  --sidebar-accent: oklch(0.2 0.008 260);
+  --sidebar-accent-foreground: oklch(0.95 0 0);
+  --sidebar-border: oklch(0.25 0.01 260);
+  --sidebar-ring: oklch(0.72 0.19 175);
+  --glow: oklch(0.72 0.19 175);
+  --checkin: oklch(0.72 0.19 175);
+  --checkin-foreground: oklch(0.12 0.005 260);
+  --checkin-muted: oklch(0.72 0.19 175 / 0.12);
   --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
-    rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
-
+    oklch(0 0 0 / 0.45) 0 10px 15px -3px,
+    oklch(0 0 0 / 0.3) 0 4px 6px -2px;
   --font-sans: system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
-
-  /* Legacy aliases used by App.css */
-  --text: var(--muted-foreground);
-  --text-h: var(--foreground);
-  --bg: var(--background);
-  --accent-bg: var(--primary-muted);
-  --accent-border: var(--primary-border);
-  --code-bg: var(--muted);
-  --social-bg: rgba(244, 243, 236, 0.5);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16171d;
-    --foreground: #f3f4f6;
-
-    --card: #1f2028;
-    --card-foreground: #f3f4f6;
-
-    --muted: #1f2028;
-    --muted-foreground: #9ca3af;
-
-    --primary: #c084fc;
-    --primary-foreground: #16171d;
-    --primary-muted: rgba(192, 132, 252, 0.15);
-    --primary-border: rgba(192, 132, 252, 0.5);
-
-    --secondary: #2e303a;
-    --secondary-foreground: #f3f4f6;
-
-    --accent: #c084fc;
-    --accent-foreground: #16171d;
-
-    --success: #4ade80;
-    --warning: #fbbf24;
-    --warning-foreground: #fffbeb;
-    --info: #38bdf8;
-
-    --border: #2e303a;
-    --input: #2e303a;
-    --ring: #c084fc;
-
-    --checkin: #fbbf24;
-    --checkin-foreground: #fffbeb;
-    --checkin-muted: rgba(251, 191, 36, 0.12);
-
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px,
-      rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-
-    --social-bg: rgba(47, 48, 58, 0.5);
-  }
 }

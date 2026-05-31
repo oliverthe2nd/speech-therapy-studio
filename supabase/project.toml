@@ -1,0 +1,10 @@
+# Remote Supabase project for this repo (Speech Therapy Dashboard)
+# Verify with: npx supabase projects list
+project_ref = "pijbedgxtdycloyexjpy"
+
+# Deploy Edge Functions (omit --project-ref when linked):
+#   npx supabase link --project-ref pijbedgxtdycloyexjpy
+#   npx supabase functions deploy analyze-speech
+#   npx supabase functions deploy transcribe-speech
+#
+# Or use: npm run deploy:speech-functions

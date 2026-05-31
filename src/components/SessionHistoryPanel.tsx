@@ -1,6 +1,13 @@
-import { useState } from 'react'
-import { ChevronDown, ChevronUp, History, Loader2, TrendingUp } from 'lucide-react'
-import type { SpeechSession } from '../supabaseClient'
+import { History, Loader2, TrendingUp } from 'lucide-react'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import type { SpeechSession } from '@/supabaseClient'
 import { SpeechFeedbackDashboard } from './SpeechFeedbackDashboard'
 
 type SessionHistoryPanelProps = {
@@ -32,64 +39,50 @@ function sessionLabel(session: SpeechSession): string {
 }
 
 function SessionRow({ session }: { session: SpeechSession }) {
-  const [expanded, setExpanded] = useState(false)
   const checkIn = isCheckIn(session)
+  const sessionKey = session.id ?? session.created_at ?? 'session'
 
   return (
-    <li className="rounded-2xl border border-border bg-card shadow-sm">
-      <button
-        type="button"
-        onClick={() => setExpanded((open) => !open)}
-        className="flex w-full items-start gap-3 p-4 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:p-5"
-        aria-expanded={expanded}
-      >
-        <span
-          className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-            checkIn
-              ? 'bg-checkin-muted text-checkin-foreground'
-              : 'bg-primary-muted text-primary'
-          }`}
-        >
-          {checkIn ? '✓' : '★'}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold text-foreground">
-              {sessionLabel(session)}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {formatSessionDate(session.created_at)}
-            </span>
+    <AccordionItem value={sessionKey} className="rounded-xl border px-4">
+      <AccordionTrigger className="py-4 hover:no-underline">
+        <div className="flex flex-1 items-start gap-3 text-left">
+          <span
+            className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+              checkIn
+                ? 'bg-checkin-muted text-checkin-foreground'
+                : 'bg-primary/10 text-primary'
+            }`}
+          >
+            {checkIn ? '✓' : '★'}
           </span>
-          {session.target_sentence && (
-            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-              “{session.target_sentence}”
-            </p>
-          )}
-          {session.transcript && (
-            <p className="mt-1 line-clamp-1 text-xs italic text-muted-foreground">
-              You said: “{session.transcript}”
-            </p>
-          )}
-        </span>
-        {expanded ? (
-          <ChevronUp className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-        ) : (
-          <ChevronDown className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden />
-        )}
-      </button>
-
-      {expanded && session.feedback && (
-        <div className="border-t border-border px-2 pb-4 pt-2 sm:px-3 sm:pb-5">
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold">
+                {sessionLabel(session)}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {formatSessionDate(session.created_at)}
+              </span>
+            </span>
+            {session.target_sentence && (
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                &ldquo;{session.target_sentence}&rdquo;
+              </p>
+            )}
+          </span>
+        </div>
+      </AccordionTrigger>
+      {session.feedback && (
+        <AccordionContent className="pb-4 pt-0">
           <SpeechFeedbackDashboard
             mode={checkIn ? 'baseline' : 'practice'}
             targetSentence={session.target_sentence ?? ''}
             transcript={session.transcript ?? ''}
             feedback={session.feedback}
           />
-        </div>
+        </AccordionContent>
       )}
-    </li>
+    </AccordionItem>
   )
 }
 
@@ -101,68 +94,70 @@ export function SessionHistoryPanel({
   checkInCount,
 }: SessionHistoryPanelProps) {
   return (
-    <section
-      id="practice-history"
-      className="rounded-3xl border border-border bg-card/90 p-5 shadow-studio sm:p-6"
-    >
-      <header className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-muted text-primary">
-            <History className="h-5 w-5" />
-          </span>
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Your practice journey
-            </h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
-              Every recording is saved here so you can look back and see how far
-              you&apos;ve come.
-            </p>
-          </div>
-        </div>
-
-        {!loading && sessions.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-muted px-3 py-1 text-xs font-semibold text-primary">
-              <TrendingUp className="h-3.5 w-3.5" aria-hidden />
-              {practiceCount} practice drill{practiceCount === 1 ? '' : 's'}
+    <Card id="practice-history" className="gap-0 py-0 shadow-studio">
+      <CardHeader className="border-b pb-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <History className="h-5 w-5" />
             </span>
-            {checkInCount > 0 && (
-              <span className="rounded-full bg-checkin-muted px-3 py-1 text-xs font-semibold text-checkin-foreground">
-                {checkInCount} check-in{checkInCount === 1 ? '' : 's'}
-              </span>
-            )}
+            <div>
+              <CardTitle className="text-lg">Your practice journey</CardTitle>
+              <CardDescription>
+                Every recording is saved here so you can look back and see how
+                far you&apos;ve come.
+              </CardDescription>
+            </div>
+          </div>
+
+          {!loading && sessions.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className="gap-1.5">
+                <TrendingUp className="h-3.5 w-3.5" aria-hidden />
+                {practiceCount} practice drill{practiceCount === 1 ? '' : 's'}
+              </Badge>
+              {checkInCount > 0 && (
+                <Badge className="border-checkin/30 bg-checkin-muted text-checkin-foreground hover:bg-checkin-muted">
+                  {checkInCount} check-in{checkInCount === 1 ? '' : 's'}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+      </CardHeader>
+
+      <CardContent className="py-6">
+        {loading && (
+          <div className="flex items-center justify-center gap-2 py-12 text-sm text-primary">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Loading your past sessions…
           </div>
         )}
-      </header>
 
-      {loading && (
-        <div className="flex items-center justify-center gap-2 py-12 text-sm text-primary">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          Loading your past sessions…
-        </div>
-      )}
+        {error && !loading && (
+          <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {error}
+          </p>
+        )}
 
-      {error && !loading && (
-        <p className="rounded-xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
-        </p>
-      )}
+        {!loading && !error && sessions.length === 0 && (
+          <p className="rounded-xl border border-dashed bg-muted/50 px-4 py-8 text-center text-sm leading-relaxed text-muted-foreground">
+            No sessions yet. Complete a check-in or practice drill — your
+            history will show up here automatically.
+          </p>
+        )}
 
-      {!loading && !error && sessions.length === 0 && (
-        <p className="rounded-xl border border-dashed border-border bg-muted px-4 py-8 text-center text-sm leading-relaxed text-muted-foreground">
-          No sessions yet. Complete a check-in or practice drill — your history
-          will show up here automatically.
-        </p>
-      )}
-
-      {!loading && !error && sessions.length > 0 && (
-        <ul className="space-y-3">
-          {sessions.map((session) => (
-            <SessionRow key={session.id ?? session.created_at} session={session} />
-          ))}
-        </ul>
-      )}
-    </section>
+        {!loading && !error && sessions.length > 0 && (
+          <Accordion type="multiple" className="space-y-3">
+            {sessions.map((session) => (
+              <SessionRow
+                key={session.id ?? session.created_at}
+                session={session}
+              />
+            ))}
+          </Accordion>
+        )}
+      </CardContent>
+    </Card>
   )
 }

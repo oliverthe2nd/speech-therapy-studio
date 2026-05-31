@@ -1,9 +1,25 @@
 import { BookOpen, Loader2, RefreshCw, Sparkles } from 'lucide-react'
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import {
   PRACTICE_LESSONS,
   type PhonemeFocus,
   type PracticeLesson,
-} from '../constants/studio'
+} from '@/constants/studio'
 
 type PracticeLibraryProps = {
   className?: string
@@ -24,15 +40,16 @@ const CATEGORY_META: Record<
 > = {
   R: {
     title: '"R" Sound Practice',
-    accent: 'text-rose-700',
-    chip: 'bg-rose-100 text-rose-800',
-    border: 'border-rose-200 hover:border-rose-300 hover:bg-rose-50/60',
+    accent: 'text-chart-4',
+    chip: 'bg-chart-4/15 text-chart-4 border border-chart-4/25',
+    border:
+      'border-chart-4/25 hover:border-chart-4/40 hover:bg-chart-4/5',
   },
   S: {
     title: '"S" Sound Practice',
-    accent: 'text-sky-700',
-    chip: 'bg-sky-100 text-sky-800',
-    border: 'border-sky-200 hover:border-sky-300 hover:bg-sky-50/60',
+    accent: 'text-info',
+    chip: 'bg-info/15 text-info border border-info/25',
+    border: 'border-info/25 hover:border-info/40 hover:bg-info/5',
   },
 }
 
@@ -51,147 +68,155 @@ export function PracticeLibrary({
   const hasPersonalizedDrills = personalizedSentences.length > 0
 
   return (
-    <aside
+    <Card
       id="practice-library"
-      className={`flex max-h-[calc(100svh-12rem)] flex-col gap-5 overflow-y-auto rounded-3xl border border-border bg-card/90 p-5 shadow-studio backdrop-blur lg:max-h-none ${className}`}
+      className={`max-h-[calc(100svh-12rem)] gap-0 overflow-hidden py-0 shadow-studio lg:max-h-none ${className}`}
     >
-      <header className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-muted text-primary">
-          <BookOpen className="h-5 w-5" />
-        </span>
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">
-            Practice library
-          </h2>
-          <p className="text-xs text-muted-foreground">Daily drill lessons</p>
+      <CardHeader className="border-b pb-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <BookOpen className="h-5 w-5" />
+          </span>
+          <div>
+            <CardTitle className="text-lg">Practice library</CardTitle>
+            <CardDescription>Daily drill lessons</CardDescription>
+          </div>
         </div>
-      </header>
+      </CardHeader>
 
-      <section className="overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary to-[#d946ef] p-px shadow-studio">
-        <div className="rounded-[15px] bg-gradient-to-br from-primary-muted via-background to-[#fdf4ff] p-4">
-          <div className="mb-3 flex items-start gap-3">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[#d946ef] text-primary-foreground shadow-md">
-              <Sparkles className="h-4 w-4" />
-            </span>
-            <div>
-              <h3 className="text-sm font-bold text-foreground">
-                🎯 Your Personalized Daily Drills
-              </h3>
-              <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-                Brand-new sentences each visit — tuned to your weak spots from
-                the Grandfather Paragraph check-in.
+      <ScrollArea className="max-h-[calc(100svh-16rem)] lg:max-h-none">
+        <CardContent className="flex flex-col gap-5 py-5">
+          <Card className="gap-0 overflow-hidden border-primary/30 bg-gradient-to-br from-primary/5 to-fuchsia-500/5 py-0 shadow-md">
+            <CardContent className="border border-primary/20 bg-gradient-to-br from-background via-background to-primary/5 p-4">
+              <div className="mb-3 flex items-start gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
+                  <Sparkles className="h-4 w-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold">
+                    🎯 Your Personalized Daily Drills
+                  </h3>
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    Brand-new sentences each visit — tuned to your weak spots
+                    from the Grandfather Paragraph check-in.
+                  </p>
+                </div>
+              </div>
+
+              {hasBaseline && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={onRefreshFreshDrills}
+                  disabled={personalizedLoading}
+                  className="mb-3 w-full text-xs"
+                >
+                  <RefreshCw
+                    className={`h-3.5 w-3.5 ${personalizedLoading ? 'animate-spin' : ''}`}
+                  />
+                  Fresh drill set
+                </Button>
+              )}
+
+              {hasBaseline && personalizedFocusAreas.length > 0 && (
+                <p className="mb-3 rounded-lg bg-background/90 px-3 py-2 text-[11px] leading-snug text-primary">
+                  <span className="font-semibold">Today&apos;s focus: </span>
+                  {personalizedFocusAreas.join(' · ')}
+                </p>
+              )}
+
+              {!hasBaseline && !personalizedLoading && (
+                <p className="rounded-xl border border-dashed bg-muted/50 px-3 py-4 text-xs leading-relaxed text-muted-foreground">
+                  Complete your speech pattern check-in at the top of the screen
+                  to unlock your personalized training drills!
+                </p>
+              )}
+
+              {personalizedLoading && (
+                <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-4 text-xs text-primary">
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                  Cooking up brand-new drill sentences…
+                </div>
+              )}
+
+              {personalizedError && hasBaseline && !personalizedLoading && (
+                <p className="rounded-xl bg-destructive/10 px-3 py-3 text-xs text-destructive">
+                  {personalizedError}
+                </p>
+              )}
+
+              {hasBaseline &&
+                !personalizedLoading &&
+                personalizedSentences.length > 0 && (
+                  <ul className="space-y-2">
+                    {personalizedSentences.map((sentence, index) => {
+                      const isActive = activeSentence === sentence
+
+                      return (
+                        <li key={`personalized-${index}`}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              onSelectPersonalizedSentence(sentence)
+                            }
+                            className={`w-full rounded-xl border bg-card p-3 text-left transition-all hover:border-primary/40 hover:bg-primary/5 ${
+                              isActive ? 'ring-2 ring-primary ring-offset-1' : ''
+                            }`}
+                          >
+                            <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-primary">
+                              For you · Drill {index + 1}
+                            </span>
+                            <span className="text-sm leading-snug">
+                              {sentence}
+                            </span>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+            </CardContent>
+          </Card>
+
+          {hasPersonalizedDrills ? (
+            <Accordion type="single" collapsible className="rounded-xl border">
+              <AccordionItem value="extra-drills" className="border-none px-2">
+                <AccordionTrigger className="py-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground hover:no-underline">
+                  Optional extra drills
+                </AccordionTrigger>
+                <AccordionContent className="space-y-5 pb-4">
+                  {(['R', 'S'] as PhonemeFocus[]).map((focus) => (
+                    <ClassicDrillCategory
+                      key={focus}
+                      focus={focus}
+                      meta={CATEGORY_META[focus]}
+                      activeSentence={activeSentence}
+                      onSelectLesson={onSelectLesson}
+                    />
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          ) : (
+            <>
+              <p className="text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                General drills
               </p>
-            </div>
-          </div>
-
-          {hasBaseline && (
-            <button
-              type="button"
-              onClick={onRefreshFreshDrills}
-              disabled={personalizedLoading}
-              className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-primary shadow-sm transition-colors hover:bg-primary-muted disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <RefreshCw
-                className={`h-3.5 w-3.5 ${personalizedLoading ? 'animate-spin' : ''}`}
-              />
-              Fresh drill set
-            </button>
+              {(['R', 'S'] as PhonemeFocus[]).map((focus) => (
+                <ClassicDrillCategory
+                  key={focus}
+                  focus={focus}
+                  meta={CATEGORY_META[focus]}
+                  activeSentence={activeSentence}
+                  onSelectLesson={onSelectLesson}
+                />
+              ))}
+            </>
           )}
-
-          {hasBaseline && personalizedFocusAreas.length > 0 && (
-            <p className="mb-3 rounded-lg bg-card/90 px-3 py-2 text-[11px] leading-snug text-primary">
-              <span className="font-semibold">Today&apos;s focus: </span>
-              {personalizedFocusAreas.join(' · ')}
-            </p>
-          )}
-
-          {!hasBaseline && !personalizedLoading && (
-            <p className="rounded-xl border border-dashed border-border bg-card/80 px-3 py-4 text-xs leading-relaxed text-muted-foreground">
-              Complete your speech pattern check-in at the top of the screen to
-              unlock your personalized training drills!
-            </p>
-          )}
-
-          {personalizedLoading && (
-            <div className="flex items-center gap-2 rounded-xl bg-card/80 px-3 py-4 text-xs text-primary">
-              <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-              Cooking up brand-new drill sentences…
-            </div>
-          )}
-
-          {personalizedError && hasBaseline && !personalizedLoading && (
-            <p className="rounded-xl bg-destructive/10 px-3 py-3 text-xs text-destructive">
-              {personalizedError}
-            </p>
-          )}
-
-          {hasBaseline &&
-            !personalizedLoading &&
-            personalizedSentences.length > 0 && (
-              <ul className="space-y-2">
-                {personalizedSentences.map((sentence, index) => {
-                  const isActive = activeSentence === sentence
-
-                  return (
-                    <li key={`personalized-${index}`}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectPersonalizedSentence(sentence)}
-                        className={`w-full rounded-xl border border-border bg-card p-3 text-left transition-all duration-200 hover:border-primary/40 hover:bg-primary-muted/50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
-                          isActive
-                            ? 'ring-2 ring-primary ring-offset-1'
-                            : ''
-                        }`}
-                      >
-                        <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-primary">
-                          For you · Drill {index + 1}
-                        </span>
-                        <span className="text-sm leading-snug text-foreground">
-                          {sentence}
-                        </span>
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            )}
-        </div>
-      </section>
-
-      {hasPersonalizedDrills ? (
-        <details className="group rounded-xl border border-border bg-muted/80">
-          <summary className="cursor-pointer list-none px-4 py-3 text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground marker:content-none [&::-webkit-details-marker]:hidden">
-            Optional extra drills ▾
-          </summary>
-          <div className="space-y-5 border-t border-border px-1 pb-3 pt-4">
-            {(['R', 'S'] as PhonemeFocus[]).map((focus) => (
-              <ClassicDrillCategory
-                key={focus}
-                focus={focus}
-                meta={CATEGORY_META[focus]}
-                activeSentence={activeSentence}
-                onSelectLesson={onSelectLesson}
-              />
-            ))}
-          </div>
-        </details>
-      ) : (
-        <>
-          <p className="text-center text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-            General drills
-          </p>
-          {(['R', 'S'] as PhonemeFocus[]).map((focus) => (
-            <ClassicDrillCategory
-              key={focus}
-              focus={focus}
-              meta={CATEGORY_META[focus]}
-              activeSentence={activeSentence}
-              onSelectLesson={onSelectLesson}
-            />
-          ))}
-        </>
-      )}
-    </aside>
+        </CardContent>
+      </ScrollArea>
+    </Card>
   )
 }
 
@@ -210,11 +235,9 @@ function ClassicDrillCategory({
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className={`text-sm font-semibold ${meta.accent}`}>{meta.title}</h3>
-        <span
-          className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${meta.chip}`}
-        >
+        <Badge variant="outline" className={meta.chip}>
           {focus}
-        </span>
+        </Badge>
       </div>
 
       <ul className="space-y-2">
@@ -226,16 +249,14 @@ function ClassicDrillCategory({
               <button
                 type="button"
                 onClick={() => onSelectLesson(lesson)}
-                className={`w-full rounded-xl border p-3 text-left transition-all duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${meta.border} ${
+                className={`w-full rounded-xl border p-3 text-left transition-all ${meta.border} ${
                   isActive ? 'ring-2 ring-primary/60 ring-offset-1' : ''
                 }`}
               >
                 <span className="mb-1 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Drill {index + 1}
                 </span>
-                <span className="text-sm leading-snug text-foreground">
-                  {lesson.sentence}
-                </span>
+                <span className="text-sm leading-snug">{lesson.sentence}</span>
               </button>
             </li>
           )

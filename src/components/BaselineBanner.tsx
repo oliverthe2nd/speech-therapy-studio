@@ -43,7 +43,7 @@ export function BaselineBanner({
       className={`group relative w-full overflow-hidden rounded-2xl border text-left transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring ${
         isActive
           ? 'border-checkin/40 bg-checkin-muted shadow-studio'
-          : 'border-primary/30 bg-gradient-to-r from-primary to-[#d946ef] text-primary-foreground shadow-studio hover:scale-[1.01]'
+          : 'border-primary/30 bg-gradient-to-r from-primary via-chart-2 to-chart-4 text-primary-foreground shadow-studio hover:scale-[1.01]'
       }`}
     >
       <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
