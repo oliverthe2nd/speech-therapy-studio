@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .env
 .env.local
+_v0-import/
+_v0-import-v2/

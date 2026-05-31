@@ -1,5 +1,8 @@
 import { Loader2, Mic, MicOff } from 'lucide-react'
-import type { AppMode } from '../constants/studio'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import type { AppMode } from '@/constants/studio'
 import { SoundwavePlaceholder } from './SoundwavePlaceholder'
 import type { FeedbackStatus } from './FeedbackCard'
 
@@ -27,71 +30,77 @@ export function RecordingStudio({
   const isProcessing = feedbackStatus === 'processing'
 
   return (
-    <section
-      className={`flex flex-col items-center justify-center gap-6 rounded-3xl border border-border bg-card/90 p-6 shadow-studio backdrop-blur sm:p-8 ${className}`}
+    <Card
+      className={`gap-0 border-border/50 py-0 shadow-studio backdrop-blur ${className}`}
     >
-      <div className="flex w-full flex-wrap items-center justify-center gap-2">
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
-            appMode === 'baseline'
-              ? 'bg-checkin-muted text-checkin-foreground'
-              : 'bg-primary-muted text-primary'
+      <CardContent className="flex flex-col items-center justify-center gap-6 px-6 py-8">
+        <div className="flex w-full flex-wrap items-center justify-center gap-2">
+          <Badge
+            variant="secondary"
+            className={
+              appMode === 'baseline'
+                ? 'border-checkin/30 bg-checkin-muted text-checkin-foreground hover:bg-checkin-muted'
+                : 'bg-primary/10 text-primary hover:bg-primary/10'
+            }
+          >
+            {appMode === 'baseline' ? 'Check-in mode' : 'Practice mode'}
+          </Badge>
+        </div>
+
+        {activeTargetSentence ? (
+          <Card className="w-full gap-0 border-border/50 bg-muted/30 py-0 shadow-none">
+            <CardContent className="px-5 py-4 text-center">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary">
+                Read this sentence aloud:
+              </p>
+              <p className="mt-2 text-base font-medium leading-relaxed sm:text-lg">
+                &ldquo;{activeTargetSentence}&rdquo;
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <p className="w-full rounded-2xl border border-dashed bg-muted/50 px-5 py-6 text-center text-sm text-muted-foreground">
+            Select a practice card from the library to begin a drill.
+          </p>
+        )}
+
+        <SoundwavePlaceholder isRecording={isRecording} levels={levels} />
+
+        <Button
+          type="button"
+          size="icon-lg"
+          onClick={onToggleRecording}
+          disabled={isProcessing || !canRecord}
+          aria-pressed={isRecording}
+          aria-label={isRecording ? 'Stop recording' : 'Start recording'}
+          className={`group relative h-24 w-24 rounded-full shadow-studio ${
+            isRecording
+              ? 'bg-destructive hover:bg-destructive/90'
+              : 'hover:scale-105'
           }`}
         >
-          {appMode === 'baseline' ? 'Check-in mode' : 'Practice mode'}
-        </span>
-      </div>
+          {isRecording && (
+            <span className="absolute inset-0 animate-ping rounded-full bg-destructive/40 opacity-30" />
+          )}
+          {isProcessing ? (
+            <Loader2 className="relative h-10 w-10 animate-spin" />
+          ) : isRecording ? (
+            <MicOff className="relative h-10 w-10" />
+          ) : (
+            <Mic className="relative h-10 w-10" />
+          )}
+        </Button>
 
-      {activeTargetSentence ? (
-        <div className="w-full rounded-2xl border border-border bg-primary-muted px-5 py-4 text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-            Read this sentence aloud:
-          </p>
-          <p className="mt-2 text-base font-medium leading-relaxed text-foreground sm:text-lg">
-            “{activeTargetSentence}”
-          </p>
-        </div>
-      ) : (
-        <p className="w-full rounded-2xl border border-dashed border-border bg-muted px-5 py-6 text-center text-sm text-muted-foreground">
-          Select a practice card from the library to begin a drill.
+        <p className="text-center text-sm text-muted-foreground">
+          {!canRecord
+            ? 'Pick a drill or start your speech pattern check-in to enable recording.'
+            : isProcessing
+              ? 'Processing your session…'
+              : isRecording
+                ? 'Recording — tap to stop'
+                : 'Tap to start recording'}
         </p>
-      )}
-
-      <SoundwavePlaceholder isRecording={isRecording} levels={levels} />
-
-      <button
-        type="button"
-        onClick={onToggleRecording}
-        disabled={isProcessing || !canRecord}
-        aria-pressed={isRecording}
-        aria-label={isRecording ? 'Stop recording' : 'Start recording'}
-        className={`group relative flex h-24 w-24 items-center justify-center rounded-full shadow-studio transition-all duration-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring disabled:cursor-not-allowed disabled:opacity-50 ${
-          isRecording
-            ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-            : 'bg-primary text-primary-foreground hover:scale-105 hover:bg-primary/90'
-        }`}
-      >
-        {isRecording && (
-          <span className="absolute inset-0 animate-ping rounded-full bg-destructive/40 opacity-30" />
-        )}
-        {isProcessing ? (
-          <Loader2 className="relative h-10 w-10 animate-spin" />
-        ) : isRecording ? (
-          <MicOff className="relative h-10 w-10" />
-        ) : (
-          <Mic className="relative h-10 w-10" />
-        )}
-      </button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        {!canRecord
-          ? 'Pick a drill or start your speech pattern check-in to enable recording.'
-          : isProcessing
-            ? 'Processing your session…'
-            : isRecording
-              ? 'Recording — tap to stop'
-              : 'Tap to start recording'}
-      </p>
-    </section>
+      </CardContent>
+    </Card>
   )
 }

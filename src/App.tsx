@@ -1,7 +1,5 @@
-import Page from './page.tsx'
+import { SpeechTherapyStudio } from '@/components/SpeechTherapyStudio'
 
-function App() {
-  return <Page />
+export default function App() {
+  return <SpeechTherapyStudio />
 }
-
-export default App
