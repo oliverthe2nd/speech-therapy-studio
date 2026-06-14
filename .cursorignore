@@ -1,0 +1,26 @@
+# Dependencies - The biggest CPU hogs
+node_modules/
+bower_components/
+env/
+venv/
+.venv/
+
+# Build outputs - Thousands of minified files
+dist/
+build/
+out/
+.next/
+.nuxt/
+.turbo/
+.vercel/
+
+# Logs and System stuff
+*.log
+.cache/
+.DS_Store
+Thumbs.db
+
+# Large Assets
+*.mp4
+*.zip
+*.pdf

@@ -1,6 +1,6 @@
+import { Loader2 } from 'lucide-react'
 import { GlassCard } from './glass-card'
 import { AudioWaveform } from './audio-waveform'
-import { Pause, SkipForward, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export type DashboardExercise = {
@@ -8,62 +8,177 @@ export type DashboardExercise = {
   title: string
   difficulty: string
   sentence: string
+  category?: 'executive' | 'warmup' | 'clinical' | 'personalized' | 'check-in'
+  /** Real-world corporate challenge shown above the script */
+  prompt?: string
+  durationLabel?: string
 }
+
+const MAX_VISIBLE_EXERCISES = 4
 
 type RecordingSectionProps = {
   exercises: DashboardExercise[]
   selectedExercise: DashboardExercise
+  targetSentence?: string
   onSelectExercise: (exercise: DashboardExercise) => void
   isRecording: boolean
   isProcessing: boolean
+  isLoading?: boolean
   canRecord: boolean
+  micStatusHint?: string
   onToggleRecording: () => void
   levels: number[]
+  sectionTitle?: string
+  focusAreas?: string[]
+  hideExercisePicker?: boolean
+  scrollableSentence?: boolean
+  onBrowseMoreDrills?: () => void
+  executiveMode?: boolean
 }
 
 export function RecordingSection({
   exercises,
   selectedExercise,
+  targetSentence,
   onSelectExercise,
   isRecording,
   isProcessing,
+  isLoading = false,
   canRecord,
+  micStatusHint,
   onToggleRecording,
   levels,
+  sectionTitle = 'Current Exercise',
+  focusAreas = [],
+  hideExercisePicker = false,
+  scrollableSentence = false,
+  onBrowseMoreDrills,
+  executiveMode = false,
 }: RecordingSectionProps) {
+  const sentence = targetSentence?.trim() || selectedExercise.sentence
+  const challengePrompt = selectedExercise.prompt?.trim()
+  const isExecutiveSession =
+    executiveMode ||
+    selectedExercise.category === 'executive' ||
+    selectedExercise.category === 'warmup' ||
+    selectedExercise.category === 'personalized'
+  const visibleExercises = exercises.slice(0, MAX_VISIBLE_EXERCISES)
+  const hiddenExerciseCount = Math.max(0, exercises.length - MAX_VISIBLE_EXERCISES)
+  const showLoadingShell = isLoading && !isRecording && !isProcessing
+
   return (
     <GlassCard className="flex h-full flex-col">
-      <div className="mb-6">
-        <h3 className="mb-3 text-sm font-medium text-muted-foreground">
-          Current Exercise
-        </h3>
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {exercises.map((exercise) => (
-            <button
-              key={exercise.id}
-              type="button"
-              onClick={() => onSelectExercise(exercise)}
-              className={cn(
-                'whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-all',
-                selectedExercise.id === exercise.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary/50 text-muted-foreground hover:bg-secondary',
+      {!hideExercisePicker && (
+        <div className="mb-6">
+          <h3 className="mb-3 text-sm font-medium text-muted-foreground">
+            {sectionTitle}
+          </h3>
+          {focusAreas.length > 0 && !executiveMode && (
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                {focusAreas[0]}
+              </span>
+              {focusAreas.length > 1 && (
+                <span className="text-xs text-muted-foreground">
+                  +{focusAreas.length - 1} more
+                </span>
               )}
-            >
-              {exercise.title}
-            </button>
-          ))}
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            {visibleExercises.map((exercise) => (
+              <button
+                key={exercise.id}
+                type="button"
+                onClick={() => onSelectExercise(exercise)}
+                className={cn(
+                  'whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition-all',
+                  selectedExercise.id === exercise.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary/50 text-muted-foreground hover:bg-secondary',
+                )}
+              >
+                {exercise.title}
+              </button>
+            ))}
+            {hiddenExerciseCount > 0 && onBrowseMoreDrills && (
+              <button
+                type="button"
+                onClick={onBrowseMoreDrills}
+                className="rounded-xl border border-dashed border-border/60 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                +{hiddenExerciseCount} more drills →
+              </button>
+            )}
+          </div>
         </div>
-      </div>
+      )}
+
+      {hideExercisePicker && focusAreas.length > 0 && !executiveMode && (
+        <p className="mb-4 text-center text-xs font-medium uppercase tracking-wider text-primary">
+          {focusAreas[0]}
+        </p>
+      )}
+
+      {isExecutiveSession && selectedExercise.durationLabel && (
+        <p className="mb-4 text-center text-xs font-semibold uppercase tracking-widest text-sky-400">
+          {selectedExercise.durationLabel} · Executive Warm-Up
+        </p>
+      )}
 
       <div className="flex flex-1 flex-col items-center justify-center py-8">
-        <div className="mb-8 max-w-md text-center">
-          <p className="text-lg font-medium leading-relaxed text-foreground">
-            &ldquo;{selectedExercise.sentence}&rdquo;
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Difficulty: {selectedExercise.difficulty}
-          </p>
+        <div className="relative mb-8 w-full max-w-md text-center">
+          {showLoadingShell ? (
+            <div
+              className="space-y-3 rounded-xl border border-border/30 bg-secondary/20 px-4 py-8"
+              aria-busy="true"
+              aria-label="Loading drill"
+            >
+              <div className="mx-auto h-4 w-3/4 animate-pulse rounded bg-muted" />
+              <div className="mx-auto h-4 w-full animate-pulse rounded bg-muted" />
+              <div className="mx-auto h-4 w-5/6 animate-pulse rounded bg-muted" />
+              <p className="pt-2 text-sm text-muted-foreground">
+                {micStatusHint ?? 'Loading your drill…'}
+              </p>
+            </div>
+          ) : (
+            <>
+              {isExecutiveSession && challengePrompt && (
+                <p className="mb-4 text-sm font-medium leading-relaxed text-primary">
+                  {challengePrompt}
+                </p>
+              )}
+              <div
+                className={cn(
+                  scrollableSentence &&
+                    'max-h-48 overflow-y-auto rounded-xl border border-border/20 bg-secondary/10 px-3 py-3',
+                  isExecutiveSession &&
+                    'rounded-xl border border-border/30 bg-secondary/10 px-4 py-4',
+                )}
+              >
+                {isExecutiveSession && (
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Your script
+                  </p>
+                )}
+                <p
+                  className={cn(
+                    'font-medium leading-relaxed text-foreground',
+                    scrollableSentence ? 'text-base' : 'text-lg',
+                  )}
+                >
+                  &ldquo;{sentence}&rdquo;
+                </p>
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {isExecutiveSession ? 'Scenario' : 'Difficulty'}:{' '}
+                {selectedExercise.difficulty}
+                {selectedExercise.durationLabel
+                  ? ` · ${selectedExercise.durationLabel}`
+                  : ''}
+              </p>
+            </>
+          )}
         </div>
 
         <div className="mb-8">
@@ -71,6 +186,7 @@ export function RecordingSection({
             isRecording={isRecording}
             isProcessing={isProcessing}
             canRecord={canRecord}
+            statusHint={micStatusHint}
             onToggleRecording={onToggleRecording}
           />
         </div>
@@ -78,42 +194,6 @@ export function RecordingSection({
         <div className="w-full max-w-lg">
           <AudioWaveform isRecording={isRecording} levels={levels} />
         </div>
-      </div>
-
-      <div className="flex items-center justify-center gap-4 border-t border-border/50 pt-4">
-        <button
-          type="button"
-          className={cn(
-            'flex items-center gap-2 rounded-xl px-4 py-2',
-            'bg-secondary/50 text-muted-foreground',
-            'transition-colors hover:bg-secondary hover:text-foreground',
-          )}
-        >
-          <Volume2 className="h-4 w-4" />
-          <span className="text-sm font-medium">Listen</span>
-        </button>
-        <button
-          type="button"
-          className={cn(
-            'flex items-center gap-2 rounded-xl px-4 py-2',
-            'bg-secondary/50 text-muted-foreground',
-            'transition-colors hover:bg-secondary hover:text-foreground',
-          )}
-        >
-          <Pause className="h-4 w-4" />
-          <span className="text-sm font-medium">Playback</span>
-        </button>
-        <button
-          type="button"
-          className={cn(
-            'flex items-center gap-2 rounded-xl px-4 py-2',
-            'bg-secondary/50 text-muted-foreground',
-            'transition-colors hover:bg-secondary hover:text-foreground',
-          )}
-        >
-          <SkipForward className="h-4 w-4" />
-          <span className="text-sm font-medium">Skip</span>
-        </button>
       </div>
     </GlassCard>
   )
@@ -123,18 +203,20 @@ function MicrophoneButtonWrapper({
   isRecording,
   isProcessing,
   canRecord,
+  statusHint,
   onToggleRecording,
 }: {
   isRecording: boolean
   isProcessing: boolean
   canRecord: boolean
+  statusHint?: string
   onToggleRecording: () => void
 }) {
   const statusLabel = isProcessing
     ? 'Analyzing your speech…'
     : isRecording
       ? 'Recording...'
-      : 'Tap to Start'
+      : statusHint ?? 'Tap to Start'
 
   return (
     <div className="relative">
@@ -192,25 +274,7 @@ function MicrophoneButtonWrapper({
         />
 
         {isProcessing ? (
-          <svg
-            className="relative z-10 h-14 w-14 animate-spin text-primary-foreground"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+          <Loader2 className="relative z-10 h-14 w-14 animate-spin text-primary-foreground" />
         ) : isRecording ? (
           <svg
             className="relative z-10 h-14 w-14 text-primary-foreground"

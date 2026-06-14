@@ -35,6 +35,15 @@ export function parseWeakFocusAreas(feedback: string): string[] {
     if (/Back-of-Throat/i.test(line)) {
       weak.add('Back-of-Throat Sounds (K and G)')
     }
+    if (/Pace \(Words Per Minute\)/i.test(line)) {
+      weak.add('Pace (Words Per Minute)')
+    }
+    if (/Filler Word Counter/i.test(line)) {
+      weak.add('Filler Word Counter')
+    }
+    if (/Clarity Score/i.test(line)) {
+      weak.add('Clarity Score')
+    }
   }
 
   return Array.from(weak)

@@ -1,5 +1,5 @@
 import { BASELINE_PRACTICE_SENTENCE } from '../constants/studio'
-import { fetchPastPracticeSentences } from '../supabaseClient'
+import { fetchPastPracticeSentences } from '../lib/database'
 import { getStoredDrillHistory, mergeExcludeSentences } from './drillHistory'
 
 export async function collectExcludeSentences(

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { pickMediaRecorderMimeType } from '@/utils/whisperAudioFile'
 
 export type RecorderStatus = 'idle' | 'recording' | 'processing'
 
@@ -14,6 +15,7 @@ export function useAudioRecorder() {
   const analyserRef = useRef<AnalyserNode | null>(null)
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const recorderMimeTypeRef = useRef('audio/webm')
   const chunksRef = useRef<Blob[]>([])
   const animationFrameRef = useRef<number | null>(null)
 
@@ -82,11 +84,14 @@ export function useAudioRecorder() {
     source.connect(analyser)
     analyserRef.current = analyser
 
-    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-      ? 'audio/webm;codecs=opus'
-      : 'audio/webm'
+    const mimeType = pickMediaRecorderMimeType()
+    recorderMimeTypeRef.current = mimeType || 'audio/webm'
 
-    const recorder = new MediaRecorder(stream, { mimeType })
+    const recorder = new MediaRecorder(
+      stream,
+      mimeType ? { mimeType } : undefined,
+    )
+    recorderMimeTypeRef.current = recorder.mimeType || mimeType || 'audio/webm'
     chunksRef.current = []
 
     recorder.ondataavailable = (event) => {
@@ -112,10 +117,14 @@ export function useAudioRecorder() {
 
     const blob = await new Promise<Blob>((resolve, reject) => {
       recorder.onstop = () => {
-        const type = recorder.mimeType || 'audio/webm'
+        const type =
+          recorder.mimeType || recorderMimeTypeRef.current || 'audio/webm'
         resolve(new Blob(chunksRef.current, { type }))
       }
       recorder.onerror = () => reject(new Error('Recording failed.'))
+      if (recorder.state === 'recording') {
+        recorder.requestData()
+      }
       recorder.stop()
     })
 

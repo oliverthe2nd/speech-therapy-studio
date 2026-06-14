@@ -5,7 +5,6 @@ import {
   Circle,
   Ear,
   Lightbulb,
-  Star,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import {
@@ -18,86 +17,34 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
-import { Progress } from '@/components/ui/progress'
 import type { AppMode } from '@/constants/studio'
+import type { ScoreMetric } from '@/types/analyzeSpeech'
 import {
   homeworkStorageKey,
   parseCoachFeedback,
   type HomeworkItem,
   type MispronunciationItem,
-  type ScoreMetric,
-  type ScoreStatus,
 } from '@/utils/parseCoachFeedback'
+import { sanitizeMispronunciations } from '@/utils/mispronunciationValidation'
 import { sanitizeCoachMarkdown } from '@/utils/sanitizeCoachMarkdown'
+import type { DashboardExercise } from '@/components/dashboard/recording-section'
+import {
+  mergeClinicalMetrics,
+  mergeExecutiveMetrics,
+  splitAssessmentMetrics,
+} from '@/utils/metricCategories'
+import { normalizeCoachText } from '@/utils/normalizeCoachText'
+import { AssessmentResultsTabs } from '@/components/AssessmentResultsTabs'
 
 type SpeechFeedbackDashboardProps = {
   mode: AppMode
   targetSentence: string
   transcript: string
   feedback: string
+  coachMetrics?: ScoreMetric[]
+  clinicalMetrics?: ScoreMetric[]
   onReturnHome?: () => void
-}
-
-function StarRating({ score, maxScore }: { score: number; maxScore: number }) {
-  return (
-    <div
-      className="flex items-center gap-0.5"
-      aria-label={`${score} of ${maxScore} stars`}
-    >
-      {Array.from({ length: maxScore }).map((_, i) => (
-        <Star
-          key={i}
-          className={`h-4 w-4 ${
-            i < score ? 'fill-warning text-warning' : 'fill-muted text-muted'
-          }`}
-        />
-      ))}
-    </div>
-  )
-}
-
-function StatusBadge({
-  status,
-  label,
-}: {
-  status: ScoreStatus
-  label: string
-}) {
-  const variants: Record<ScoreStatus, string> = {
-    excellent: 'bg-success/15 text-success border-success/30',
-    good: 'bg-primary/15 text-primary border-primary/30',
-    'needs-practice':
-      'bg-warning/15 text-warning-foreground border-warning/30',
-  }
-
-  return (
-    <Badge variant="outline" className={`${variants[status]} font-medium text-xs`}>
-      {label}
-    </Badge>
-  )
-}
-
-function ScoreCard({ metric }: { metric: ScoreMetric }) {
-  const progressValue = (metric.score / metric.maxScore) * 100
-
-  return (
-    <Card className="gap-0 border-border/50 py-0 shadow-sm transition-shadow hover:shadow-md">
-      <CardContent className="p-4">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start justify-between">
-            <h3 className="text-sm font-semibold text-foreground">
-              {metric.title}
-            </h3>
-            <StatusBadge status={metric.status} label={metric.statusLabel} />
-          </div>
-          <div className="space-y-2">
-            <StarRating score={metric.score} maxScore={metric.maxScore} />
-            <Progress value={progressValue} className="h-2" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
+  onOpenStructuralModule?: (exercise: DashboardExercise) => void
 }
 
 function TargetSentenceCard({ sentence }: { sentence: string }) {
@@ -182,11 +129,13 @@ function CoachingTipCard({ tip }: { tip: string }) {
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/15">
             <Lightbulb className="h-4 w-4 text-primary" />
           </div>
-          Try This Mouth Move!
+          Executive Delivery Tip
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
-        <p className="text-sm leading-relaxed text-foreground/90">{tip}</p>
+        <p className="whitespace-pre-line text-sm leading-relaxed text-foreground/90">
+          {normalizeCoachText(tip)}
+        </p>
       </CardContent>
     </Card>
   )
@@ -260,12 +209,39 @@ export function SpeechFeedbackDashboard({
   targetSentence,
   transcript,
   feedback,
+  coachMetrics = [],
+  clinicalMetrics: clinicalMetricsProp = [],
   onReturnHome,
+  onOpenStructuralModule,
 }: SpeechFeedbackDashboardProps) {
-  const parsed = useMemo(
-    () => parseCoachFeedback(sanitizeCoachMarkdown(feedback)),
-    [feedback],
-  )
+  const parsed = useMemo(() => {
+    const base = parseCoachFeedback(sanitizeCoachMarkdown(feedback))
+    const sentence = targetSentence.trim()
+    if (!sentence && !transcript.trim()) return base
+
+    return {
+      ...base,
+      mispronunciations: sanitizeMispronunciations(
+        base.mispronunciations,
+        sentence,
+        transcript,
+      ),
+    }
+  }, [feedback, targetSentence, transcript])
+
+  const { executive, clinical } = useMemo(() => {
+    const combined = [...coachMetrics, ...parsed.metrics]
+    const split = splitAssessmentMetrics(combined)
+    return {
+      executive: mergeExecutiveMetrics(split.executive, combined),
+      clinical: mergeClinicalMetrics(
+        clinicalMetricsProp.length > 0
+          ? clinicalMetricsProp
+          : parsed.clinicalMetrics,
+        combined,
+      ),
+    }
+  }, [coachMetrics, clinicalMetricsProp, parsed.clinicalMetrics, parsed.metrics])
 
   const displaySentence =
     targetSentence.trim() ||
@@ -331,18 +307,20 @@ export function SpeechFeedbackDashboard({
 
   const subtitle =
     mode === 'baseline'
-      ? 'Your speech pattern check-in results'
-      : 'Your personalized practice analysis'
+      ? 'Executive presence with Accent Clarity & Intelligibility analysis'
+      : 'Presentation delivery with phonetic precision and global intelligibility tracking'
 
   const returnLabel =
-    mode === 'baseline' ? 'Back to practice drills' : 'Choose another drill'
+    mode === 'baseline'
+      ? 'Back to executive scenarios'
+      : 'Choose another scenario'
 
   return (
     <div className="min-h-full bg-background">
       <div className="mx-auto max-w-2xl px-0 py-0">
         <header className="mb-8 text-center">
           <h2 className="mb-1 text-2xl font-bold text-foreground">
-            Speech Therapy Feedback
+            Session Analysis
           </h2>
           <p className="text-sm text-muted-foreground">{subtitle}</p>
         </header>
@@ -352,17 +330,13 @@ export function SpeechFeedbackDashboard({
             <TargetSentenceCard sentence={displaySentence} />
           )}
 
-          {parsed.metrics.length > 0 && (
-            <section>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                Performance Scores
-              </h3>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {parsed.metrics.map((metric, index) => (
-                  <ScoreCard key={`${metric.title}-${index}`} metric={metric} />
-                ))}
-              </div>
-            </section>
+          {(executive.length > 0 || clinical.length > 0) && (
+            <AssessmentResultsTabs
+              mode={mode}
+              executiveMetrics={executive}
+              clinicalMetrics={clinical}
+              onOpenStructuralModule={onOpenStructuralModule}
+            />
           )}
 
           <CoachHeardCard

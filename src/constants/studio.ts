@@ -8,17 +8,18 @@ export type PracticeLesson = {
   focus: PhonemeFocus
 }
 
-/** Grandfather Paragraph — phonetically balanced full baseline (speech pathology standard) */
-export const BASELINE_PRACTICE_SENTENCE =
-  'You wish to know all about my grandfather. Well, he is nearly ninety-three years old; he dresses himself in an ancient black frock coat, usually minorly stained with ink. He still thinks swiftly, but a long flowing beard clings to his chin, and his voice has a slight quiver when he speaks. Twice each day he plays with a zinc zipper on a soft leather case, which holds a small gold clock.'
+import { BASELINE_STRESS_TEST_PASSAGE } from './baselineFlow'
 
-export const BASELINE_PARAGRAPH_TITLE = 'The Grandfather Paragraph'
+/** Executive benchmark passage — Step 3 high-stakes reading stress-test */
+export const BASELINE_PRACTICE_SENTENCE = BASELINE_STRESS_TEST_PASSAGE
+
+export const BASELINE_PARAGRAPH_TITLE = 'Executive Communication Baseline'
 
 /** @deprecated Use BASELINE_PRACTICE_SENTENCE */
 export const BASELINE_DIAGNOSTIC_SENTENCE = BASELINE_PRACTICE_SENTENCE
 
 export const BASELINE_FOCUS_DESCRIPTION =
-  'This classic paragraph gently tests R, S, Th, L, V & F, blends, and more — a full friendly sweep of how your mouth is moving today.'
+  'A three-step conversational calibration with your executive coach — profile, context, then a strategic delivery benchmark under simulated boardroom pressure.'
 
 /** @deprecated Use BASELINE_FOCUS_DESCRIPTION */
 export const BASELINE_SCAN_DESCRIPTION = BASELINE_FOCUS_DESCRIPTION

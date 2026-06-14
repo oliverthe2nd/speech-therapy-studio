@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import type { SpeechSession } from '@/supabaseClient'
+import type { SpeechSession } from '@/lib/database'
 import { SpeechFeedbackDashboard } from './SpeechFeedbackDashboard'
 
 type SessionHistoryPanelProps = {

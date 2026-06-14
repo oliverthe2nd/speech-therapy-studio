@@ -1,3 +1,5 @@
+import { normalizeCoachText } from '@/utils/normalizeCoachText'
+
 export type ScoreStatus = 'excellent' | 'good' | 'needs-practice'
 
 export type ScoreMetric = {
@@ -21,6 +23,7 @@ export type HomeworkItem = {
 
 export type ParsedCoachFeedback = {
   metrics: ScoreMetric[]
+  clinicalMetrics: ScoreMetric[]
   coachHeardText: string
   mispronunciations: MispronunciationItem[]
   coachingTip: string
@@ -29,10 +32,27 @@ export type ParsedCoachFeedback = {
 }
 
 const SECTION_HEADERS = [
-  { key: 'scorecard', pattern: /📊\s*\*\*My Quick Score Card\*\*/i },
-  { key: 'heard', pattern: /👂\s*\*\*What the Coach Heard\*\*/i },
-  { key: 'tip', pattern: /👅\s*\*\*Try This Mouth Move!\*\*/i },
-  { key: 'steps', pattern: /🗓️\s*\*\*My Simple Next Steps\*\*/i },
+  {
+    key: 'scorecard',
+    pattern:
+      /(?:📊\s*)?\*\*(?:My Quick Score Card|Executive Score Card)\*\*/i,
+  },
+  {
+    key: 'clinical',
+    pattern:
+      /(?:🔬|🎯)\s*\*\*(?:Phonetic Sound Precision|Phonetic Precision Tracker|Clinical Sound Trackers)\*\*/i,
+  },
+  { key: 'heard', pattern: /(?:👂\s*)?\*\*What the Coach Heard\*\*/i },
+  {
+    key: 'tip',
+    pattern:
+      /(?:👅|👔)\s*\*\*(?:Try This Mouth Move!|Executive Delivery Tip)\*\*/i,
+  },
+  {
+    key: 'steps',
+    pattern:
+      /(?:🗓️\s*)?\*\*(?:My Simple Next Steps|Your Next Business Drills)\*\*/i,
+  },
 ] as const
 
 const DEFAULT_LABELS: Record<ScoreStatus, string> = {
@@ -94,46 +114,259 @@ function parseStatusLabel(raw: string, status: ScoreStatus): string {
   return dash[0]?.trim() || cleaned
 }
 
-function parseMetrics(scorecardText: string): ScoreMetric[] {
-  const metrics: ScoreMetric[] = []
+function pushMetric(
+  metrics: ScoreMetric[],
+  seen: Set<string>,
+  title: string,
+  score: number,
+  maxScore: number,
+  statusLabelRaw = '',
+) {
+  const normalizedTitle = title.trim()
+  if (!normalizedTitle) return
+
+  const key = normalizedTitle.toLowerCase()
+  if (seen.has(key)) return
+  seen.add(key)
+
+  const clampedScore = Math.min(maxScore, Math.max(1, score || 1))
+  const status = scoreToStatus(clampedScore, maxScore)
+  metrics.push({
+    title: normalizedTitle,
+    score: clampedScore,
+    maxScore,
+    status,
+    statusLabel: parseStatusLabel(statusLabelRaw, status),
+  })
+}
+
+function parseMetricLine(line: string, metrics: ScoreMetric[], seen: Set<string>) {
   const maxScore = 3
 
-  for (const line of scorecardText.split('\n')) {
-    const bulletMatch = line.match(
-      /^\s*[•\-*]\s*\*\*(.+?)\*\*:\s*((?:⭐|☆)+)\s*(.*)$/u,
+  const bulletMatch = line.match(
+    /^\s*[•\-*]\s*\*\*(.+?)\*\*[:\s]+((?:⭐|☆)+)\s*(.*)$/u,
+  )
+  if (bulletMatch) {
+    pushMetric(
+      metrics,
+      seen,
+      bulletMatch[1],
+      countFilledStars(bulletMatch[2]),
+      maxScore,
+      bulletMatch[3],
     )
-    if (bulletMatch) {
-      const title = bulletMatch[1].trim()
-      const score = Math.min(maxScore, Math.max(0, countFilledStars(bulletMatch[2])))
-      const status = scoreToStatus(score, maxScore)
-      metrics.push({
-        title,
-        score: score || 1,
-        maxScore,
-        status,
-        statusLabel: parseStatusLabel(bulletMatch[3], status),
-      })
-      continue
-    }
+    return
+  }
 
-    const plainMatch = line.match(
-      /^\s*\*\*(.+?)\*\*:\s*((?:⭐|☆)+)\s*(.*)$/u,
+  const plainMatch = line.match(
+    /^\s*\*\*(.+?)\*\*[:\s]+((?:⭐|☆)+)\s*(.*)$/u,
+  )
+  if (plainMatch) {
+    pushMetric(
+      metrics,
+      seen,
+      plainMatch[1],
+      countFilledStars(plainMatch[2]),
+      maxScore,
+      plainMatch[3],
     )
-    if (plainMatch) {
-      const title = plainMatch[1].trim()
-      const score = Math.min(maxScore, Math.max(0, countFilledStars(plainMatch[2])))
-      const status = scoreToStatus(score, maxScore)
-      metrics.push({
-        title,
-        score: score || 1,
-        maxScore,
-        status,
-        statusLabel: parseStatusLabel(plainMatch[3], status),
-      })
-    }
+    return
+  }
+
+  const numericBullet = line.match(
+    /^\s*[•\-*]\s*\*\*(.+?)\*\*[:\s]+(\d+)\s*\/\s*(\d+)\s*(.*)$/u,
+  )
+  if (numericBullet) {
+    pushMetric(
+      metrics,
+      seen,
+      numericBullet[1],
+      Number(numericBullet[2]),
+      Number(numericBullet[3]) || maxScore,
+      numericBullet[4],
+    )
+    return
+  }
+
+  const numericPlain = line.match(
+    /^\s*\*\*(.+?)\*\*[:\s]+(\d+)\s*\/\s*(\d+)\s*(.*)$/u,
+  )
+  if (numericPlain) {
+    pushMetric(
+      metrics,
+      seen,
+      numericPlain[1],
+      Number(numericPlain[2]),
+      Number(numericPlain[3]) || maxScore,
+      numericPlain[4],
+    )
+  }
+}
+
+function parseMetrics(scorecardText: string): ScoreMetric[] {
+  const metrics: ScoreMetric[] = []
+  const seen = new Set<string>()
+
+  for (const line of scorecardText.split('\n')) {
+    parseMetricLine(line, metrics, seen)
   }
 
   return metrics
+}
+
+function parseMetricsLoose(text: string): ScoreMetric[] {
+  const metrics: ScoreMetric[] = []
+  const seen = new Set<string>()
+
+  for (const line of text.split('\n')) {
+    parseMetricLine(line, metrics, seen)
+  }
+
+  return metrics
+}
+
+function normalizeMetricsArray(raw: unknown[]): ScoreMetric[] {
+  const metrics: ScoreMetric[] = []
+  const seen = new Set<string>()
+
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue
+    const record = item as Record<string, unknown>
+    if (typeof record.title !== 'string') continue
+
+    const maxScore =
+      typeof record.maxScore === 'number' && record.maxScore > 0
+        ? record.maxScore
+        : 3
+    const score =
+      typeof record.score === 'number' ? record.score : Number(record.score) || 1
+
+    pushMetric(
+      metrics,
+      seen,
+      record.title,
+      score,
+      maxScore,
+      typeof record.statusLabel === 'string' ? record.statusLabel : '',
+    )
+  }
+
+  return metrics
+}
+
+function parseMetricsFromJson(text: string): {
+  metrics: ScoreMetric[]
+  clinicalMetrics: ScoreMetric[]
+} {
+  const empty = { metrics: [] as ScoreMetric[], clinicalMetrics: [] as ScoreMetric[] }
+  const trimmed = text.trim()
+  if (!trimmed) return empty
+
+  const tryParse = (parsed: Record<string, unknown>) => {
+    const metrics = Array.isArray(parsed.metrics)
+      ? normalizeMetricsArray(parsed.metrics)
+      : []
+    const clinicalMetrics = Array.isArray(parsed.clinicalMetrics)
+      ? normalizeMetricsArray(parsed.clinicalMetrics)
+      : []
+    if (metrics.length > 0 || clinicalMetrics.length > 0) {
+      return { metrics, clinicalMetrics }
+    }
+    return null
+  }
+
+  if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed) as Record<string, unknown>
+      const direct = tryParse(parsed)
+      if (direct) return direct
+      if (
+        parsed.analysis &&
+        typeof parsed.analysis === 'object'
+      ) {
+        const nested = tryParse(parsed.analysis as Record<string, unknown>)
+        if (nested) return nested
+      }
+    } catch {
+      /* fall through */
+    }
+  }
+
+  const match = text.match(/\{[\s\S]*?"metrics"\s*:\s*\[[\s\S]*?\][\s\S]*?\}/)
+  if (match) {
+    try {
+      const parsed = JSON.parse(match[0]) as Record<string, unknown>
+      const result = tryParse(parsed)
+      if (result) return result
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return empty
+}
+
+function parseStoredCoachMetrics(raw: string): {
+  metrics: ScoreMetric[]
+  clinicalMetrics: ScoreMetric[]
+} {
+  const empty = { metrics: [] as ScoreMetric[], clinicalMetrics: [] as ScoreMetric[] }
+  const trimmed = raw.trim()
+  if (!trimmed.startsWith('{')) return empty
+
+  try {
+    const parsed = JSON.parse(trimmed) as Record<string, unknown>
+    return {
+      metrics: Array.isArray(parsed.metrics)
+        ? normalizeMetricsArray(parsed.metrics)
+        : [],
+      clinicalMetrics: Array.isArray(parsed.clinicalMetrics)
+        ? normalizeMetricsArray(parsed.clinicalMetrics)
+        : [],
+    }
+  } catch {
+    return empty
+  }
+}
+
+/** Pull score metrics from markdown, JSON, or stored coach payload. */
+export function extractSessionMetrics(
+  feedback: string,
+  storedMetricsJson?: string | null,
+): ScoreMetric[] {
+  if (storedMetricsJson?.trim()) {
+    const stored = parseStoredCoachMetrics(storedMetricsJson)
+    if (stored.metrics.length > 0) return stored.metrics
+  }
+
+  const sanitized = feedback.trim()
+  if (!sanitized) return []
+
+  const parsed = parseCoachFeedback(sanitized)
+  if (parsed.metrics.length > 0) return parsed.metrics
+
+  const loose = parseMetricsLoose(sanitized)
+  if (loose.length > 0) return loose
+
+  return parseMetricsFromJson(sanitized).metrics
+}
+
+export function extractClinicalMetrics(
+  feedback: string,
+  storedMetricsJson?: string | null,
+): ScoreMetric[] {
+  if (storedMetricsJson?.trim()) {
+    const stored = parseStoredCoachMetrics(storedMetricsJson)
+    if (stored.clinicalMetrics.length > 0) return stored.clinicalMetrics
+  }
+
+  const sanitized = feedback.trim()
+  if (!sanitized) return []
+
+  const parsed = parseCoachFeedback(sanitized)
+  if (parsed.clinicalMetrics.length > 0) return parsed.clinicalMetrics
+
+  return parseMetricsFromJson(sanitized).clinicalMetrics
 }
 
 function parseMispronunciations(heardText: string): MispronunciationItem[] {
@@ -212,7 +445,7 @@ function parseHomework(stepsText: string): HomeworkItem[] {
 }
 
 function cleanProseSection(text: string): string {
-  return text
+  return normalizeCoachText(text)
     .split('\n')
     .map((line) => stripMarkdownInline(line))
     .filter((line) => line.length > 0)
@@ -221,7 +454,23 @@ function cleanProseSection(text: string): string {
 
 export function parseCoachFeedback(feedback: string): ParsedCoachFeedback {
   const sections = splitSections(feedback)
-  const metrics = sections.scorecard ? parseMetrics(sections.scorecard) : []
+  let metrics = sections.scorecard ? parseMetrics(sections.scorecard) : []
+  let clinicalMetrics = sections.clinical
+    ? parseMetrics(sections.clinical)
+    : []
+
+  if (metrics.length === 0) {
+    metrics = parseMetricsLoose(feedback)
+  }
+
+  const jsonParsed = parseMetricsFromJson(feedback)
+  if (metrics.length === 0 && jsonParsed.metrics.length > 0) {
+    metrics = jsonParsed.metrics
+  }
+  if (clinicalMetrics.length === 0 && jsonParsed.clinicalMetrics.length > 0) {
+    clinicalMetrics = jsonParsed.clinicalMetrics
+  }
+
   const heardRaw = sections.heard ?? ''
   const mispronunciations = parseMispronunciations(heardRaw)
   const coachHeardText = cleanProseSection(heardRaw)
@@ -229,11 +478,12 @@ export function parseCoachFeedback(feedback: string): ParsedCoachFeedback {
   const homework = sections.steps ? parseHomework(sections.steps) : []
 
   const parseComplete =
-    metrics.length > 0 &&
+    (metrics.length > 0 || clinicalMetrics.length > 0) &&
     Boolean(coachingTip || coachHeardText || homework.length > 0)
 
   return {
     metrics,
+    clinicalMetrics,
     coachHeardText,
     mispronunciations,
     coachingTip,
