@@ -1,50 +1,84 @@
 # Deploy speech Edge Functions to Supabase
 # Requires: npx supabase login (once) OR SUPABASE_ACCESS_TOKEN in environment
 #
-# Correct project ref (Speech Therapy Dashboard):
-#   pijbedgxtdycloyexjpy
-# NOT: pijbedgxtdycloybnhly (typo — returns 404 Not Found)
+# Project ref: pijbedgxtdycloyexjpy
 
-$ErrorActionPreference = "Stop"
-$ProjectRef = "pijbedgxtdycloyexjpy"
+$ErrorActionPreference = 'Stop'
+$ProjectRef = 'pijbedgxtdycloyexjpy'
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 
 Set-Location $Root
 
-function Import-EnvKey {
+function Get-EnvValue {
   param([string]$KeyName)
-  if ($env:$KeyName) { return }
-  $envFile = Join-Path $Root ".env"
-  if (-not (Test-Path $envFile)) { return }
-  Get-Content $envFile | ForEach-Object {
-    if ($_ -match "^\s*$KeyName=(.+)$") {
-      Set-Item -Path "env:$KeyName" -Value $matches[1].Trim().Trim('"').Trim("'")
+
+  $existing = [Environment]::GetEnvironmentVariable($KeyName)
+  if ($existing) {
+    return $existing
+  }
+
+  $envFile = Join-Path $Root '.env'
+  if (-not (Test-Path $envFile)) {
+    return $null
+  }
+
+  $pattern = '^\s*' + [regex]::Escape($KeyName) + '=(.+)$'
+  foreach ($line in Get-Content $envFile) {
+    if ($line -match $pattern) {
+      $value = $matches[1].Trim()
+      $value = $value.Trim([char]34)
+      $value = $value.Trim([char]39)
+      return $value
     }
   }
+
+  return $null
 }
 
-Write-Host "Linking project $ProjectRef..."
+Write-Host ('Linking project ' + $ProjectRef + '...')
 npx supabase link --project-ref $ProjectRef
-
-Import-EnvKey "ANTHROPIC_API_KEY"
-Import-EnvKey "OPENAI_API_KEY"
-
-if (-not $env:ANTHROPIC_API_KEY) {
-  throw "ANTHROPIC_API_KEY not found. Set it in .env or your environment."
-}
-if (-not $env:OPENAI_API_KEY) {
-  throw "OPENAI_API_KEY not found. Set a valid key in .env or your environment."
+if ($LASTEXITCODE -ne 0) {
+  throw 'Failed to link Supabase project. Run: npx supabase login'
 }
 
-Write-Host "Setting Edge Function secrets..."
-npx supabase secrets set "ANTHROPIC_API_KEY=$($env:ANTHROPIC_API_KEY)" "OPENAI_API_KEY=$($env:OPENAI_API_KEY)"
+$anthropicKey = Get-EnvValue 'ANTHROPIC_API_KEY'
+$openaiKey = Get-EnvValue 'OPENAI_API_KEY'
 
-Write-Host "Deploying analyze-speech..."
+if (-not $anthropicKey) {
+  throw 'ANTHROPIC_API_KEY not found. Set a valid Anthropic key in .env'
+}
+if (-not $openaiKey) {
+  throw 'OPENAI_API_KEY not found. Set a valid OpenAI key in .env'
+}
+
+$secretsFile = Join-Path $Root 'supabase\.secrets.deploy.tmp'
+$secretLines = @(
+  ('ANTHROPIC_API_KEY=' + $anthropicKey),
+  ('OPENAI_API_KEY=' + $openaiKey)
+)
+Set-Content -Path $secretsFile -Encoding ascii -Value $secretLines
+
+Write-Host 'Setting Edge Function secrets from .env...'
+npx supabase secrets set --env-file $secretsFile --project-ref $ProjectRef
+if ($LASTEXITCODE -ne 0) {
+  Remove-Item $secretsFile -Force -ErrorAction SilentlyContinue
+  throw 'Failed to set Supabase secrets. Run: npx supabase login, then npm run deploy:speech-functions'
+}
+
+Remove-Item $secretsFile -Force -ErrorAction SilentlyContinue
+
+Write-Host 'Deploying analyze-speech...'
 npx supabase functions deploy analyze-speech --project-ref $ProjectRef
+if ($LASTEXITCODE -ne 0) {
+  throw 'Failed to deploy analyze-speech'
+}
 
-Write-Host "Deploying transcribe-speech..."
+Write-Host 'Deploying transcribe-speech...'
 npx supabase functions deploy transcribe-speech --project-ref $ProjectRef
+if ($LASTEXITCODE -ne 0) {
+  throw 'Failed to deploy transcribe-speech'
+}
 
-Write-Host "Done."
-Write-Host "  analyze-speech:  https://$ProjectRef.supabase.co/functions/v1/analyze-speech"
-Write-Host "  transcribe-speech: https://$ProjectRef.supabase.co/functions/v1/transcribe-speech"
+Write-Host 'Done.'
+Write-Host ('  analyze-speech:    https://' + $ProjectRef + '.supabase.co/functions/v1/analyze-speech')
+Write-Host ('  transcribe-speech: https://' + $ProjectRef + '.supabase.co/functions/v1/transcribe-speech')

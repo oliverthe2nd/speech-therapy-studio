@@ -15,24 +15,24 @@ export function BaselineBanner({
   const isActive = appMode === 'baseline'
 
   const eyebrow = hasCompletedCheckIn
-    ? 'Update your progress'
-    : 'First-time check-in'
+    ? 'Refresh your roadmap'
+    : 'Executive baseline'
 
   const title = isActive
     ? hasCompletedCheckIn
-      ? 'Updating your check-in'
-      : 'Speech pattern check-in active'
+      ? 'Conversational check-in in progress'
+      : 'Your coach calibration is active'
     : hasCompletedCheckIn
-      ? 'Retake Your Speech Pattern Check-In'
-      : 'Start Your Speech Pattern Check-In'
+      ? 'Retake Your Executive Baseline'
+      : 'Start Your Executive Baseline'
 
   const description = isActive
     ? hasCompletedCheckIn
-      ? 'Read the practice sentence below. When you finish, we will refresh your personalized daily drills.'
-      : 'Read the practice sentence below, then tap the mic when you are ready.'
+      ? 'Complete all three conversational steps to refresh your Growth Roadmap and daily drills.'
+      : 'Answer your coach in three steps — profile, context, then a strategic delivery benchmark.'
     : hasCompletedCheckIn
-      ? 'A fresh recording updates your score card and rebuilds your daily drills for the sounds you are working on now.'
-      : 'One quick recording unlocks your personalized daily drills.'
+      ? 'A fresh three-step conversation updates your Growth Roadmap and rebuilds tailored drills.'
+      : 'Three minutes with your executive coach unlocks your personalized Growth Roadmap and daily drills.'
 
   const ctaLabel = hasCompletedCheckIn ? 'Refresh check-in' : "Let's go"
 

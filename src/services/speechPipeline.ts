@@ -1,4 +1,6 @@
 import type { AppMode, PhonemeFocus } from '../constants/studio'
+import type { BaselineStep } from '../constants/baselineFlow'
+import type { ExecutiveDossier } from '../types/analyzeSpeech'
 import { analyzeSpeechViaEdgeFunction } from './analyzeSpeech'
 import { transcribeSpeechViaEdgeFunction } from './transcribeSpeech'
 
@@ -6,6 +8,10 @@ export type CoachingContext = {
   mode: AppMode
   targetSentence: string
   phonemeFocus?: PhonemeFocus | null
+  recordingDurationMs?: number
+  baselineStep?: BaselineStep
+  priorDossier?: ExecutiveDossier
+  activePhaseFocus?: 1 | 2 | 3
 }
 
 export async function transcribeAudio(blob: Blob): Promise<string> {
@@ -25,6 +31,10 @@ export async function processRecording(
   context: CoachingContext,
 ) {
   const transcript = await transcribeAudio(blob)
-  const { feedback } = await analyzeSpeechViaEdgeFunction(transcript, context)
-  return { transcript, feedback }
+  const result = await analyzeSpeechViaEdgeFunction(transcript, context)
+  return {
+    transcript: result.transcript,
+    feedback: result.feedback,
+    analysis: result.analysis,
+  }
 }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   fetchSessionHistory,
   type SpeechSession,
-} from '../supabaseClient'
+} from '../lib/database'
 
 export function useSessionHistory() {
   const [sessions, setSessions] = useState<SpeechSession[]>([])

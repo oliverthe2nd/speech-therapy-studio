@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react'
+import { MessageCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -8,11 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  BASELINE_FOCUS_DESCRIPTION,
-  BASELINE_PARAGRAPH_TITLE,
-  BASELINE_PRACTICE_SENTENCE,
-} from '@/constants/studio'
+import { BASELINE_FLOW_STEPS, BASELINE_WIZARD_INTRO } from '@/constants/baselineFlow'
+import { BASELINE_PARAGRAPH_TITLE } from '@/constants/studio'
 
 type BaselineModalProps = {
   open: boolean
@@ -28,12 +25,12 @@ export function BaselineModal({
   onConfirm,
 }: BaselineModalProps) {
   const title = hasCompletedCheckIn
-    ? `Update your ${BASELINE_PARAGRAPH_TITLE} check-in`
-    : `Your ${BASELINE_PARAGRAPH_TITLE} check-in`
+    ? `Refresh your ${BASELINE_PARAGRAPH_TITLE}`
+    : `Your ${BASELINE_PARAGRAPH_TITLE}`
 
   const footerNote = hasCompletedCheckIn
-    ? 'Your personalized daily drills will refresh when you finish this updated check-in.'
-    : 'Your daily drill library will step aside while you finish this quick check-in. You can jump back to practice anytime.'
+    ? 'Your Growth Roadmap and daily drills will refresh when you complete all three steps again.'
+    : 'Three quick conversational steps with your executive coach — about three minutes total.'
 
   const confirmLabel = hasCompletedCheckIn ? 'Retake check-in' : 'Start check-in'
 
@@ -42,17 +39,27 @@ export function BaselineModal({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <div className="mb-2 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-            <Sparkles className="h-6 w-6" />
+            <MessageCircle className="h-6 w-6" />
           </div>
           <DialogTitle className="text-2xl">{title}</DialogTitle>
           <DialogDescription className="text-left leading-relaxed">
-            {BASELINE_FOCUS_DESCRIPTION}
+            {BASELINE_WIZARD_INTRO}
           </DialogDescription>
         </DialogHeader>
 
-        <blockquote className="rounded-2xl border bg-muted/50 px-4 py-4 text-sm leading-relaxed">
-          &ldquo;{BASELINE_PRACTICE_SENTENCE}&rdquo;
-        </blockquote>
+        <ol className="space-y-3 rounded-2xl border bg-muted/50 px-4 py-4 text-sm leading-relaxed">
+          {BASELINE_FLOW_STEPS.map((step) => (
+            <li key={step.step} className="flex gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                {step.step}
+              </span>
+              <div>
+                <p className="font-medium text-foreground">{step.title}</p>
+                <p className="mt-1 text-muted-foreground">{step.coachPrompt}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
 
         <p className="text-xs text-muted-foreground">{footerNote}</p>
 

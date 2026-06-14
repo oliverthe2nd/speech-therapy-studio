@@ -5,6 +5,8 @@
  *   supabase secrets set OPENAI_API_KEY=sk-...
  */
 
+import { whisperFilename, whisperMimeType } from './whisperAudioFile.ts'
+
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
@@ -52,10 +54,12 @@ async function transcribeWithWhisper(
   }
 
   const formData = new FormData()
+  const filename = whisperFilename(audioBytes, mimeType)
+  const resolvedMimeType = whisperMimeType(audioBytes, mimeType)
   formData.append(
     'file',
-    new Blob([audioBytes], { type: mimeType }),
-    mimeType.includes('webm') ? 'recording.webm' : 'recording.audio',
+    new Blob([audioBytes], { type: resolvedMimeType }),
+    filename,
   )
   formData.append('model', 'whisper-1')
 

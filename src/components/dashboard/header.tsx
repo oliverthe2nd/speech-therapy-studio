@@ -1,14 +1,32 @@
-import { Bell, Search } from 'lucide-react'
+import { Search } from 'lucide-react'
+import { NotificationPanel } from '@/components/dashboard/notification-panel'
+import type { StudioNotification } from '@/hooks/useStudioNotifications'
 import { cn } from '@/lib/utils'
 
 type HeaderProps = {
-  title?: string
-  subtitle?: string
+  title: string
+  subtitle: string
+  notifications: StudioNotification[]
+  unreadCount: number
+  readIds: Set<string>
+  notificationsOpen: boolean
+  onNotificationsOpenChange: (open: boolean) => void
+  onMarkAllNotificationsRead: () => void
+  onSelectNotification: (notification: StudioNotification) => void
+  onSearch?: () => void
 }
 
 export function Header({
-  title = 'Welcome back, Alex',
-  subtitle = "Let's continue your speech journey today",
+  title,
+  subtitle,
+  notifications,
+  unreadCount,
+  readIds,
+  notificationsOpen,
+  onNotificationsOpenChange,
+  onMarkAllNotificationsRead,
+  onSelectNotification,
+  onSearch,
 }: HeaderProps) {
   return (
     <header className="mb-8 flex items-center justify-between">
@@ -20,28 +38,26 @@ export function Header({
       <div className="flex items-center gap-3">
         <button
           type="button"
+          onClick={onSearch}
           className={cn(
             'flex h-10 w-10 items-center justify-center rounded-xl',
             'border border-border/50 bg-card/60 backdrop-blur-sm',
             'text-muted-foreground transition-colors hover:bg-card hover:text-foreground',
           )}
-          aria-label="Search"
+          aria-label="Jump to practice drills"
         >
           <Search className="h-5 w-5" />
         </button>
 
-        <button
-          type="button"
-          className={cn(
-            'relative flex h-10 w-10 items-center justify-center rounded-xl',
-            'border border-border/50 bg-card/60 backdrop-blur-sm',
-            'text-muted-foreground transition-colors hover:bg-card hover:text-foreground',
-          )}
-          aria-label="Notifications"
-        >
-          <Bell className="h-5 w-5" />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-        </button>
+        <NotificationPanel
+          open={notificationsOpen}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          readIds={readIds}
+          onOpenChange={onNotificationsOpenChange}
+          onMarkAllRead={onMarkAllNotificationsRead}
+          onSelect={onSelectNotification}
+        />
       </div>
     </header>
   )
