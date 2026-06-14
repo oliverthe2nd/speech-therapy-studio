@@ -214,7 +214,7 @@ export function AIFeedbackCard({
               <div className="flex items-center gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
                 <p className="text-sm text-muted-foreground">
-                  Whisper + coach analysis via Supabase…
+                  Whisper + coach analysis…
                 </p>
               </div>
               {feedback && sessionScore !== null && (

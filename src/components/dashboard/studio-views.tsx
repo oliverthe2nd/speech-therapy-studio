@@ -264,13 +264,13 @@ export function SettingsView() {
         <div>
           <dt className="font-medium text-muted-foreground">Coach analysis</dt>
           <dd className="mt-1 text-foreground">
-            Powered by Supabase Edge Functions (Whisper + Claude)
+            Powered by Vercel API routes (Whisper + Claude)
           </dd>
         </div>
         <div>
           <dt className="font-medium text-muted-foreground">Session storage</dt>
           <dd className="mt-1 text-foreground">
-            Recordings and feedback are saved to your Supabase project
+            Recordings and feedback are saved to your Neon database
           </dd>
         </div>
       </dl>
@@ -290,7 +290,7 @@ export function HelpView() {
     },
     {
       title: '3. Tap the microphone',
-      body: 'Record yourself, then tap again to stop. Whisper transcribes your speech securely via Supabase.',
+      body: 'Record yourself, then tap again to stop. Whisper transcribes your speech securely via the API.',
     },
     {
       title: '4. Review AI feedback',

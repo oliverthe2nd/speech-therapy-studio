@@ -67,7 +67,7 @@ export function usePersonalizedDrills(
           parsedFocus,
         )
       } catch (cacheErr) {
-        console.warn('Could not persist drill cache to Supabase:', cacheErr)
+        console.warn('Could not persist drill cache:', cacheErr)
       }
     }
   }, [activePhaseFocus])
@@ -84,7 +84,7 @@ export function usePersonalizedDrills(
         return true
       }
     } catch (cacheErr) {
-      console.warn('Could not load drill cache from Supabase:', cacheErr)
+      console.warn('Could not load drill cache:', cacheErr)
     }
     return false
   }, [])

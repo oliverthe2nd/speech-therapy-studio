@@ -1,6 +1,6 @@
 import type { BaselineStep } from '@/constants/baselineFlow'
 
-/** Mirrors supabase/functions/analyze-speech/types.ts */
+/** Client-side mirror of server/speech/types.ts */
 export type AnalyzeSpeechRequest = {
   transcript: string
   mode: 'baseline' | 'practice'

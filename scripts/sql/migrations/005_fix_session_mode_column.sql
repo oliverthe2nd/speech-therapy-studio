@@ -1,4 +1,4 @@
--- Run this entire script in Supabase SQL Editor (safe to run more than once)
+-- Run this entire script in Neon SQL Editor (safe to run more than once)
 
 -- Step 1: Add all Studio columns if missing (before any UPDATE references them)
 alter table public.sessions

@@ -8,11 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy:analyze-speech": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-analyze-speech.ps1",
-    "deploy:speech-functions": "powershell -ExecutionPolicy Bypass -File ./scripts/deploy-analyze-speech.ps1",
     "export:research-metrics": "node ./scripts/export-anonymous-speech-metrics.mjs",
-    "migrate": "node ./scripts/run-migration.mjs",
-    "migrate:supabase-data": "node ./scripts/migrate-supabase-to-neon.mjs"
+    "migrate": "node ./scripts/run-migration.mjs"
   },
   "dependencies": {
     "@neondatabase/auth": "^0.4.2-beta",

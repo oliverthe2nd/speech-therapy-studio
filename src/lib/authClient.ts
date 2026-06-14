@@ -17,10 +17,18 @@ export const neonAuth = createInternalNeonAuth(authUrl ?? '', {
 export const authClient = neonAuth.adapter
 
 export const ADMIN_CALLBACK_PATH = '/dashboard'
+export const AUTH_CALLBACK_PATH = '/auth/callback'
 
 export function adminCallbackUrl(): string {
   if (typeof window === 'undefined') {
-    return ADMIN_CALLBACK_PATH
+    return AUTH_CALLBACK_PATH
   }
-  return `${window.location.origin}${ADMIN_CALLBACK_PATH}`
+  return `${window.location.origin}${AUTH_CALLBACK_PATH}`
+}
+
+export function loginErrorCallbackUrl(): string {
+  if (typeof window === 'undefined') {
+    return '/login'
+  }
+  return `${window.location.origin}/login`
 }

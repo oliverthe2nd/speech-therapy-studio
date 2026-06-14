@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '@neondatabase/auth/ui/tailwind';
 @config '../tailwind.config.ts';
 @import 'tw-animate-css';
 

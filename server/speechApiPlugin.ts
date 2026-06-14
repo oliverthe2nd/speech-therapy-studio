@@ -17,7 +17,7 @@ function sendJson(res: ServerResponse, status: number, body: unknown) {
   res.end(JSON.stringify(body))
 }
 
-/** Dev/preview API routes replacing Supabase Edge Functions. */
+/** Dev/preview API routes for speech transcription and coach analysis. */
 export function speechApiPlugin(): Plugin {
   return {
     name: 'speech-api',

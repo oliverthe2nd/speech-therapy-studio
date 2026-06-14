@@ -1,4 +1,4 @@
--- Run in Supabase SQL editor or via CLI
+-- Run in Neon SQL editor or via npm run migrate
 create table if not exists public.sessions (
   id uuid primary key default gen_random_uuid(),
   transcript text not null,

@@ -1,30 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useContext } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
+import {
+  AuthCallback as NeonAuthCallback,
+  AuthUIContext,
+} from '@neondatabase/auth/react/ui'
 import { SpeechTherapyStudio } from '@/components/SpeechTherapyStudio'
 import { AuthGuard } from '@/components/auth/AuthGuard'
-import { AuthCallback } from '@/components/auth/AuthCallback'
 import { LoginPage } from '@/components/auth/LoginPage'
-import { ADMIN_CALLBACK_PATH, authClient } from '@/lib/authClient'
+import { ADMIN_CALLBACK_PATH } from '@/lib/authClient'
 
 function RootRedirect() {
-  const [pending, setPending] = useState(true)
-  const [authenticated, setAuthenticated] = useState(false)
+  const { hooks } = useContext(AuthUIContext)
+  const { data, isPending } = hooks.useSession()
 
-  useEffect(() => {
-    let cancelled = false
-
-    authClient.getSession().then((result) => {
-      if (cancelled) return
-      setAuthenticated(Boolean(result.data?.session))
-      setPending(false)
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  if (pending) {
+  if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">
         Loading…
@@ -33,10 +22,7 @@ function RootRedirect() {
   }
 
   return (
-    <Navigate
-      to={authenticated ? ADMIN_CALLBACK_PATH : '/login'}
-      replace
-    />
+    <Navigate to={data ? ADMIN_CALLBACK_PATH : '/login'} replace />
   )
 }
 
@@ -45,7 +31,10 @@ export default function App() {
     <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route
+        path="/auth/callback"
+        element={<NeonAuthCallback redirectTo={ADMIN_CALLBACK_PATH} />}
+      />
       <Route
         path={ADMIN_CALLBACK_PATH}
         element={

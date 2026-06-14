@@ -2,25 +2,25 @@ import {
   buildSystemPrompt,
   buildUserMessage,
   BASELINE_PRACTICE_SENTENCE,
-} from '../../supabase/functions/analyze-speech/prompts.ts'
+} from '../speech/prompts.ts'
 import {
   buildProfessionalMetrics,
   parseProfessionalMetrics,
   professionalMetricsToScoreMetrics,
-} from '../../supabase/functions/analyze-speech/professionalMetrics.ts'
+} from '../speech/professionalMetrics.ts'
 import {
   patchFeedbackMarkdownMispronunciations,
   sanitizeMispronunciations,
   type MispronunciationItem,
-} from '../../supabase/functions/analyze-speech/mispronunciationValidation.ts'
+} from '../speech/mispronunciationValidation.ts'
 import type {
   AnalyzeSpeechRequest,
   AnalyzeSpeechResponse,
   ExecutiveDossier,
   GrowthRoadmap,
   SpeechAnalysis,
-} from '../../supabase/functions/analyze-speech/types.ts'
-import { normalizeCoachText } from '../../supabase/functions/analyze-speech/normalizeCoachText.ts'
+} from '../speech/types.ts'
+import { normalizeCoachText } from '../speech/normalizeCoachText.ts'
 
 const CLAUDE_MODEL = 'claude-sonnet-4-6'
 

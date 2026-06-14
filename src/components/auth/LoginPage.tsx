@@ -1,6 +1,11 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Mail } from 'lucide-react'
-import { adminCallbackUrl, authClient } from '@/lib/authClient'
+import {
+  adminCallbackUrl,
+  authClient,
+  loginErrorCallbackUrl,
+} from '@/lib/authClient'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -10,12 +15,36 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
+function readAuthError(searchParams: URLSearchParams): string | null {
+  const error =
+    searchParams.get('error') ??
+    searchParams.get('error_description') ??
+    searchParams.get('message')
+
+  if (!error) return null
+
+  return error.replace(/_/g, ' ').toLowerCase()
+}
+
 export function LoginPage() {
+  const [searchParams] = useSearchParams()
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>(
     'idle',
   )
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  useEffect(() => {
+    const authError = readAuthError(searchParams)
+    if (authError) {
+      setStatus('error')
+      setErrorMessage(
+        authError.includes('invalid')
+          ? 'That sign-in link is invalid or expired. Request a new one below.'
+          : authError,
+      )
+    }
+  }, [searchParams])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -28,6 +57,7 @@ export function LoginPage() {
     const { error } = await authClient.signIn.magicLink({
       email: trimmed,
       callbackURL: adminCallbackUrl(),
+      errorCallbackURL: loginErrorCallbackUrl(),
     })
 
     if (error) {

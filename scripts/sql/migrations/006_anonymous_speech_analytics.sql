@@ -110,7 +110,7 @@ create policy "Service role full access on speech_analytics"
   using (true)
   with check (true);
 
--- Future auth pattern (comment-only scaffold — enable when Supabase Auth ships):
+-- Future auth pattern (comment-only scaffold — enable when Neon Auth RLS policies are finalized):
 --
 --   create table public.session_ownership (
 --     session_id uuid primary key references public.sessions(id) on delete cascade,
